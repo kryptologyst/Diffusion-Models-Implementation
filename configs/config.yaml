@@ -1,0 +1,91 @@
+# Default configuration for diffusion models training
+defaults:
+  - _self_
+  - override /model: unet
+  - override /data: cifar10
+  - override /training: default
+  - override /evaluation: default
+
+# Global settings
+seed: 42
+device: auto  # auto, cpu, cuda, mps
+mixed_precision: true
+compile_model: false
+
+# Paths
+data_dir: ./data
+output_dir: ./outputs
+checkpoint_dir: ./checkpoints
+log_dir: ./logs
+
+# Logging
+log_level: INFO
+use_wandb: false
+wandb_project: diffusion-models
+wandb_entity: null
+
+# Model settings
+model:
+  _target_: src.diffusion_models.models.unet.UNet
+  in_channels: 3
+  out_channels: 3
+  model_channels: 128
+  attention_resolutions: [16, 8]
+  num_res_blocks: 2
+  channel_mult: [1, 2, 2, 2]
+  num_heads: 4
+  use_scale_shift_norm: true
+  dropout: 0.1
+
+# Data settings
+data:
+  _target_: src.diffusion_models.data.cifar10.CIFAR10DataModule
+  data_dir: ${data_dir}
+  batch_size: 128
+  num_workers: 4
+  pin_memory: true
+  image_size: 32
+
+# Training settings
+training:
+  _target_: src.diffusion_models.training.trainer.DiffusionTrainer
+  max_epochs: 1000
+  learning_rate: 1e-4
+  weight_decay: 0.0
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  val_check_interval: 0.5
+  log_every_n_steps: 50
+  save_top_k: 3
+  monitor: val_loss
+  mode: min
+
+# Diffusion process settings
+diffusion:
+  num_timesteps: 1000
+  beta_start: 0.0001
+  beta_end: 0.02
+  beta_schedule: linear  # linear, cosine
+  prediction_type: epsilon  # epsilon, v_prediction, sample
+  loss_type: mse  # mse, l1, huber
+
+# Evaluation settings
+evaluation:
+  _target_: src.diffusion_models.evaluation.evaluator.DiffusionEvaluator
+  num_samples: 10000
+  batch_size: 64
+  compute_fid: true
+  compute_is: true
+  compute_lpips: true
+  fid_batch_size: 256
+  fid_device: auto
+
+# Sampling settings
+sampling:
+  num_inference_steps: 50
+  guidance_scale: 1.0
+  eta: 0.0
+  seed: null

@@ -1,0 +1,49 @@
+# Model configurations
+
+# Small UNet for quick experimentation
+model:
+  _target_: src.diffusion_models.models.unet.UNet
+  in_channels: 3
+  out_channels: 3
+  model_channels: 64
+  attention_resolutions: [16]
+  num_res_blocks: 1
+  channel_mult: [1, 2, 2]
+  num_heads: 2
+  use_scale_shift_norm: true
+  dropout: 0.1
+
+# Data settings
+data:
+  _target_: src.diffusion_models.data.cifar10.CIFAR10DataModule
+  data_dir: ./data
+  batch_size: 64
+  num_workers: 4
+  pin_memory: true
+  image_size: 32
+
+# Training settings
+training:
+  _target_: src.diffusion_models.training.trainer.DiffusionTrainer
+  max_epochs: 100
+  learning_rate: 1e-4
+  weight_decay: 0.0
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  val_check_interval: 0.5
+  log_every_n_steps: 50
+  save_top_k: 3
+  monitor: val_loss
+  mode: min
+
+# Diffusion process settings
+diffusion:
+  num_timesteps: 1000
+  beta_start: 0.0001
+  beta_end: 0.02
+  beta_schedule: linear
+  prediction_type: epsilon
+  loss_type: mse
